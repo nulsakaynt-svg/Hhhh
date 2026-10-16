@@ -1,0 +1,286 @@
+-- [[ ПРИВАТНЫЙ ЧАТ DELTA — Cups 4561 (С возможностью сворачивания) ]] --
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local CoreGui = game:GetService("CoreGui")
+local RobloxReplicatedStorage = game:GetService("RobloxReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+
+-- Очистка старых версий
+if CoreGui:FindFirstChild("Cups 4561") then CoreGui["Cups 4561"]:Destroy() end
+if CoreGui:FindFirstChild("CupsAuth") then CoreGui.CupsAuth:Destroy() end
+
+-- Скрытая папка обмена сообщениями
+local networkFolder = RobloxReplicatedStorage:FindFirstChild("CupsNetChat")
+if not networkFolder then
+    networkFolder = Instance.new("Folder")
+    networkFolder.Name = "CupsNetChat"
+    networkFolder.Parent = RobloxReplicatedStorage
+end
+
+-- Окно авторизации
+local AuthGui = Instance.new("ScreenGui")
+AuthGui.Name = "CupsAuth"
+AuthGui.Parent = CoreGui
+
+local AuthFrame = Instance.new("Frame")
+AuthFrame.Size = UDim2.new(0, 250, 0, 120)
+AuthFrame.Position = UDim2.new(0.5, -125, 0.4, -60)
+AuthFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+AuthFrame.BorderSizePixel = 0
+AuthFrame.Parent = AuthGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = AuthFrame
+
+local AuthTitle = Instance.new("TextLabel")
+AuthTitle.Size = UDim2.new(1, 0, 0, 30)
+AuthTitle.Text = "ENTER SECRET KEY:"
+AuthTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+AuthTitle.BackgroundTransparency = 1
+AuthTitle.Font = Enum.Font.SourceSansBold
+AuthTitle.TextSize = 16
+AuthTitle.Parent = AuthFrame
+
+local KeyInput = Instance.new("TextBox")
+KeyInput.Size = UDim2.new(0, 210, 0, 30)
+KeyInput.Position = UDim2.new(0, 20, 0, 40)
+KeyInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyInput.PlaceholderText = "Key here..."
+KeyInput.Text = ""
+KeyInput.Font = Enum.Font.SourceSans
+KeyInput.TextSize = 14
+KeyInput.Parent = AuthFrame
+
+local AuthButton = Instance.new("TextButton")
+AuthButton.Size = UDim2.new(0, 100, 0, 30)
+AuthButton.Position = UDim2.new(0.5, -50, 0, 80)
+AuthButton.BackgroundColor3 = Color3.fromRGB(0, 150, 70)
+AuthButton.Text = "LOGIN"
+AuthButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AuthButton.Font = Enum.Font.SourceSansBold
+AuthButton.TextSize = 14
+AuthButton.Parent = AuthFrame
+
+local UICornerBtn = Instance.new("UICorner")
+UICornerBtn.CornerRadius = UDim.new(0, 5)
+UICornerBtn.Parent = AuthButton
+
+-- Логика перетаскивания (плавная и без лагов, замена устаревшему .Draggable)
+local function makeDraggable(topBar, mainFrame)
+    local dragging, dragInput, dragStart, startPos
+    
+    topBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = mainFrame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    topBar.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+-- Главная функция чата Cups 4561
+local function MainChatScript()
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "Cups 4561"
+    ScreenGui.Parent = CoreGui
+    ScreenGui.ResetOnSpawn = false
+
+    -- Главное окно меню
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Parent = ScreenGui
+    MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    MainFrame.Position = UDim2.new(0.05, 0, 0.4, 0)
+    MainFrame.Size = UDim2.new(0, 300, 0, 220)
+    MainFrame.BorderSizePixel = 0
+
+    local MainCorner = Instance.new("UICorner")
+    MainCorner.CornerRadius = UDim.new(0, 6)
+    MainCorner.Parent = MainFrame
+
+    -- Панель управления (Меню) сверху
+    local TopBar = Instance.new("Frame")
+    TopBar.Name = "TopBar"
+    TopBar.Size = UDim2.new(1, 0, 0, 25)
+    TopBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    TopBar.BorderSizePixel = 0
+    TopBar.Parent = MainFrame
+
+    local TopCorner = Instance.new("UICorner")
+    TopCorner.CornerRadius = UDim.new(0, 6)
+    TopCorner.Parent = TopBar
+
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+    TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Text = "Cups 4561"
+    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.Font = Enum.Font.SourceSansBold
+    TitleLabel.TextSize = 14
+    TitleLabel.Parent = TopBar
+
+    -- Кнопка Свернуть
+    local MinimizeBtn = Instance.new("TextButton")
+    MinimizeBtn.Size = UDim2.new(0, 25, 0, 25)
+    MinimizeBtn.Position = UDim2.new(1, -30, 0, 0)
+    MinimizeBtn.BackgroundTransparency = 1
+    MinimizeBtn.Text = "_"
+    MinimizeBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    MinimizeBtn.Font = Enum.Font.SourceSansBold
+    MinimizeBtn.TextSize = 16
+    MinimizeBtn.Parent = TopBar
+
+    -- Лог чата
+    local ChatLog = Instance.new("ScrollingFrame")
+    ChatLog.Name = "ChatLog"
+    ChatLog.Parent = MainFrame
+    ChatLog.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    ChatLog.Position = UDim2.new(0, 5, 0, 30)
+    ChatLog.Size = UDim2.new(0, 290, 0, 155)
+    ChatLog.CanvasSize = UDim2.new(0, 0, 0, 0)
+    ChatLog.ScrollBarThickness = 4
+    ChatLog.BorderSizePixel = 0
+
+    local LogCorner = Instance.new("UICorner")
+    LogCorner.CornerRadius = UDim.new(0, 4)
+    LogCorner.Parent = ChatLog
+
+    local UIListLayout = Instance.new("UIListLayout")
+    UIListLayout.Parent = ChatLog
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    -- Поле ввода сообщений
+    local TextBox = Instance.new("TextBox")
+    TextBox.Parent = MainFrame
+    TextBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    TextBox.Position = UDim2.new(0, 5, 0, 190)
+    TextBox.Size = UDim2.new(0, 290, 0, 25)
+    TextBox.Font = Enum.Font.SourceSans
+    TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TextBox.TextSize = 14
+    TextBox.Text = ""
+    TextBox.PlaceholderText = "Напишите сообщение..."
+    TextBox.BorderSizePixel = 0
+
+    local BoxCorner = Instance.new("UICorner")
+    BoxCorner.CornerRadius = UDim.new(0, 4)
+    BoxCorner.Parent = TextBox
+
+    -- Маленькая плавающая кнопка для разворачивания
+    local OpenBtn = Instance.new("TextButton")
+    OpenBtn.Size = UDim2.new(0, 90, 0, 30)
+    OpenBtn.Position = UDim2.new(0.02, 0, 0.2, 0)
+    OpenBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    OpenBtn.Text = "Cups Чат"
+    OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    OpenBtn.Font = Enum.Font.SourceSansBold
+    OpenBtn.TextSize = 14
+    OpenBtn.Visible = false
+    OpenBtn.Parent = ScreenGui
+
+    local OpenCorner = Instance.new("UICorner")
+    OpenCorner.CornerRadius = UDim.new(0, 6)
+    OpenCorner.Parent = OpenBtn
+
+    -- Включаем перетаскивание
+    makeDraggable(TopBar, MainFrame)
+    makeDraggable(OpenBtn, OpenBtn)
+
+    -- Логика сворачивания/разворачивания
+    MinimizeBtn.MouseButton1Click:Connect(function()
+        MainFrame.Visible = false
+        OpenBtn.Visible = true
+    end)
+
+    OpenBtn.MouseButton1Click:Connect(function()
+        OpenBtn.Visible = false
+        MainFrame.Visible = true
+    end)
+
+    -- Добавление сообщений в интерфейс
+    local function addMessage(sender, text)
+        local TextLabel = Instance.new("TextLabel")
+        TextLabel.Parent = ChatLog
+        TextLabel.BackgroundTransparency = 1
+        TextLabel.Size = UDim2.new(1, -10, 0, 20)
+        TextLabel.Font = Enum.Font.SourceSans
+        TextLabel.TextSize = 14
+        TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+        
+        if sender == LocalPlayer.Name then
+            TextLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+        elseif sender == "Система" then
+            TextLabel.TextColor3 = Color3.fromRGB(255, 200, 50)
+        else
+            TextLabel.TextColor3 = Color3.fromRGB(150, 200, 255)
+        end
+        
+        TextLabel.Text = " [" .. sender .. "]: " .. text
+        ChatLog.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
+        ChatLog.CanvasPosition = Vector2.new(0, UIListLayout.AbsoluteContentSize.Y)
+    end
+
+    -- Отправка сообщений
+    local function sendMessage(text)
+        if text == "" then return end
+        task.spawn(function()
+            pcall(function()
+                local msgObj = Instance.new("StringValue")
+                msgObj.Name = LocalPlayer.Name
+                msgObj.Value = text
+                msgObj.Parent = networkFolder
+                task.wait(0.1)
+                msgObj:Destroy()
+            end)
+        end)
+    end
+
+    networkFolder.ChildAdded:Connect(function(child)
+        if child:IsA("StringValue") then
+            if child.Value == "" then task.wait() end 
+            addMessage(child.Name, child.Value)
+        end
+    end)
+
+    TextBox.FocusLost:Connect(function(enterPressed)
+        if enterPressed then
+            sendMessage(TextBox.Text)
+            TextBox.Text = ""
+        end
+    end)
+
+    addMessage("Система", "Чат Cups 4561 успешно запущен. Цензура отключена.")
+end
+
+-- Проверка ключей CAPS / RAZE
+AuthButton.MouseButton1Click:Connect(function()
+    local enteredKey = KeyInput.Text
+    
+    if enteredKey == "RAZE" or enteredKey == "CAPS" then
+        AuthGui:Destroy()
+        MainChatScript()
+    else
